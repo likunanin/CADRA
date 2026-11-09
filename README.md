@@ -1,37 +1,40 @@
-# CADRA — AI Creative Studio website
+# CADRA — AI Creative Studio
 
-## Run
-1. Install Node.js 18+ (https://nodejs.org)
-2. In this folder:
-   ADMIN_PASSWORD=your-secret node server.js      (Windows PowerShell: $env:ADMIN_PASSWORD="your-secret"; node server.js)
-3. Open http://localhost:3000  — orders page: http://localhost:3000/admin.html
+## Free website deployment with GitHub Pages
 
-## Structure
-- public/index.html   website (design + order form)
-- public/admin.html   order dashboard (password protected API)
-- server.js           backend: saves orders to data/orders.json
-- data/               orders are stored here (back this up)
+The public website is published from `public/` using GitHub Actions. Orders open WhatsApp with the customer's form details; customers must press **Send** in WhatsApp to submit the message. GitHub Pages does not run the Node.js backend, so the admin dashboard, saved orders, and Telegram alerts are not available in this free setup.
 
-## Optional: Telegram alert for each new order
-Set TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID (create a bot with @BotFather).
-The admin dashboard includes a **Test Telegram** button. Configure both values, open `/admin.html`, enter the admin password, and click it to confirm delivery. Failed sends are reported in the server console and in the dashboard.
+1. Push changes to the `main` branch on GitHub.
+2. In the GitHub repository, open **Settings → Pages** and set the build/deployment source to **GitHub Actions**.
+3. Open the **Actions** tab and wait for **Deploy static website to GitHub Pages** to finish successfully.
+4. In **Settings → Pages → Custom domain**, enter `cadrastudio.online.ge` and save.
+5. At the domain provider, add the DNS record GitHub Pages requests for `cadrastudio.online.ge`. For a subdomain, this is normally a CNAME pointing to `likunanin.github.io`; use the exact DNS host/value shown by GitHub or your domain provider.
+6. Wait for DNS to update, then return to **Settings → Pages** and enable **Enforce HTTPS** when that option becomes available.
 
-## Order management
-In `/admin.html`, open the dashboard to filter orders by status, update an order's status (new, contacted, in progress, or done), see the new-order count, and export all orders to CSV. Order data is written atomically to `data/orders.json`; automatic daily copies are kept in `data/backups/` (up to 14).
+The workflow publishes only the website files in `public/` and deliberately omits `admin.html`. `public/CNAME` configures the custom domain, and the static `robots.txt` and `sitemap.xml` use that domain.
 
-Use `.env.example` as the environment-variable checklist and replace the placeholder admin password. This dependency-free server does not load `.env` automatically; set variables in your shell or hosting dashboard. In PowerShell, for example: `$env:ADMIN_PASSWORD="your-secret"; $env:TELEGRAM_BOT_TOKEN="your-token"; $env:TELEGRAM_CHAT_ID="your-chat-id"; node server.js`. Keep `.env` and `data/` out of source control; the included `.gitignore` excludes both. JSON storage is appropriate for a small studio with modest order volume; make sure the `data/` directory is on persistent storage when deploying.
+## Run the Node.js backend locally
 
-## Deploy
-### Deploy to Render
-1. Push this project to GitHub.
-2. In the Render dashboard, choose **New → Blueprint**, connect the repository, and deploy using `render.yaml`.
-3. When prompted, enter a strong `ADMIN_PASSWORD`. In the service's **Environment** settings, add `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` if you want Telegram alerts. Never commit real values for these variables.
-4. The blueprint creates a Node web service on the Starter plan and mounts a 1 GB persistent disk at `/data`. It sets `DATA_DIR=/data`, so order JSON and daily backups are stored on that disk. Render supplies `PORT`; the server listens on it.
-5. After deploy, open `https://<your-render-service>.onrender.com/health` and confirm it returns `ok`. Then open `/admin.html`, sign in, and use **Test Telegram** if notifications are configured.
-6. To use `cadra.ge`, add the custom domain in Render, then add the DNS records Render specifies at your domain registrar. Render provisions HTTPS after DNS verification. Set `SITE_URL=https://cadra.ge` in the Render environment once the domain is connected.
+The Node.js backend remains in this repository for local testing or a future Node.js host. It is not part of the free GitHub Pages deployment. The public form always sends the customer to WhatsApp, so it does not save orders to the local JSON file.
 
-The server also works on other Node hosts. Set `DATA_DIR` to the host's persistent-storage mount path, `SITE_URL` to the canonical origin (for example, `https://cadra.ge`), and the required admin password in the host's environment settings. If the domain changes, update the canonical, hreflang, Open Graph, and Twitter URLs in `public/index.html`. Add the social preview image at `public/og-image.jpg`; the page currently references that path.
+1. Install Node.js 18 or newer.
+2. In PowerShell, from this folder, run:
 
-The site uses `public/logo.png` for its favicon and Apple touch icon. Static assets are cached for one day; HTML is revalidated so updates appear promptly.
+   ```powershell
+   $env:ADMIN_PASSWORD="choose-a-local-password"
+   node server.js
+   ```
 
-Phone: +995 593 415 541 (edit in public/index.html, search "593").
+3. Open `http://localhost:3000`. The backend API and `/admin.html` dashboard are available locally; orders submitted through the public form are sent to WhatsApp instead of being stored.
+
+## Project files
+
+- `public/index.html`, `public/styles.css`, and logo assets: public website
+- `.github/workflows/pages.yml`: GitHub Pages deployment workflow
+- `server.js` and `public/admin.html`: Node.js order API and admin dashboard, for local use or future backend hosting
+- `.env.example`: environment-variable names for a future Node.js host; this simple server does not load `.env` automatically
+- `data/`: local order records; excluded from Git
+
+The domain's social preview image is referenced as `public/og-image.jpg`; add that image before launch if you want a custom preview when sharing the website.
+
+Phone / WhatsApp: +995 593 415 541
